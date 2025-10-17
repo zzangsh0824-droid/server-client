@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Booster Panel Display</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #111;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      user-select: none;
+    }
+
+    #carNumber {
+      font-size: 3em;
+      margin-bottom: 30px;
+    }
+
+    #arrow {
+      font-size: 6em;
+      color: #ccc;
+      text-shadow: none;
+      transition: all 0.3s ease;
+    }
+
+    .booster {
+      color: #fff176;
+      text-shadow:
+        0 0 10px #fff176,
+        0 0 20px #ffeb3b,
+        0 0 40px #ffc107,
+        0 0 60px #ff9800;
+      animation: wave 1.2s infinite linear;
+    }
+
+    @keyframes wave {
+      0%   { filter: hue-rotate(0deg) brightness(1.1); }
+      25%  { filter: hue-rotate(60deg) brightness(1.4); }
+      50%  { filter: hue-rotate(120deg) brightness(1.8); }
+      75%  { filter: hue-rotate(180deg) brightness(1.4); }
+      100% { filter: hue-rotate(240deg) brightness(1.1); }
+    }
+  </style>
+</head>
+<body>
+  <div id="carNumber">-</div>
+  <div id="arrow">⬜</div>
+
+  <script>
+    const SERVER_URL = "http://<중앙서버-IP>:3000";
+    const PI_ID = "pi1";
+    const socket = io(SERVER_URL);
+
+    const carNumberEl = document.getElementById("carNumber");
+    const arrowEl = document.getElementById("arrow");
+
+    let resetTimer = null;
+
+    socket.emit("register", { id: PI_ID });
+
+    socket.on("update-display", (data) => {
+      const { car_number, direction } = data;
+
+      carNumberEl.textContent = car_number || "-";
+
+      let arrowSymbol = "⬜";
+      if (direction === "left") arrowSymbol = "⬅️";
+      else if (direction === "right") arrowSymbol = "➡️";
+      else if (direction === "up") arrowSymbol = "⬆️";
+      else if (direction === "down") arrowSymbol = "⬇️";
+
+      arrowEl.textContent = arrowSymbol;
+      arrowEl.classList.add("booster"); 
+
+      if (resetTimer) clearTimeout(resetTimer);
+
+      resetTimer = setTimeout(() => {
+        arrowEl.textContent = "⬜";
+        carNumberEl.textContent = "-";
+        arrowEl.classList.remove("booster"); 
+      }, 3000);
+    });
+  </script>
+</body>
+</html>
